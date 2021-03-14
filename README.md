@@ -79,10 +79,10 @@ In conclusion, the key takeaway for me while using `geom_dl()` in the case of my
 Medium Test
 ---
 
-For creating some simple custom positioning methods, I'm employing the general strategy to first select a single point which will demark the ideal spot for intuitive label placement in the considered geometry. By heuristics, this is often taken at the extremities of the gemoetry considered, and with the help of `directlabels::gapply()`, we can use functions such as `min()` and `max()` to obtain these points for **each distinct** categorical variable. 
+For creating some simple custom positioning methods, I'm employing the general strategy to first select a single point which will demark the ideal spot for intuitive label placement in the considered geometry. By heuristics, this is often taken at the extremities of the geometry considered, and with the help of `directlabels::gapply()`, we can use functions such as `min()` and `max()` to obtain these points for **each distinct** categorical variable. 
 
 <details>
-<summary> `gapply` reference </summary>
+<summary> gapply reference </summary>
 
 Function parameters: (with `inlinedocs` style comments/documentation)
 ```r
@@ -122,14 +122,14 @@ direct.label(g, density.peak)
 <img src = "Images/densitypeak.png" width = "100%">
 
 The same strategy can be applied while creating a custom positioning method for a lineplot:
-- Labelling points at the very beginning is an option, wherein the labels are placed to the left of the first `x` value. Since the leftmost value is the smallest `x`, we can subset the data frame and extract `min(x)` to get the point position we require for each group. Next, in order to horizontally adjust/position the labels to the left of this point, we just need to set `hjust = 1` within a `transform()` operation on the data frame of labels:
+- Labelling points at the very beginning is an option, wherein the labels are placed to the left of the first `x` value. Since the leftmost value is the smallest `x`, we can subset the data frame and extract `min(x)` to get the point position we require for each group. Next, in order to horizontally adjust the labels to the left of this point, we can set `hjust = 1` within a `transform()` operation on the data frame of labels:
 ```r 
 line.startpoint <- function(d, ...) {
   transform(gapply(d, subset, x == min(x)), hjust = 1)
 }
 ```
 
-- Conversely, labels can be positioned at the end by taking the rightmost/maximum `x` value (i.e. `max(x)`) for each group, and subsequently shifting the label positions towards the right of the endpoint(s) by setting `hjust = 0`:
+- Conversely, labels can be positioned at the end by taking the rightmost/maximum `x` value (i.e. `max(x)`) for each group, and by subsequently shifting the label positions towards the right of the endpoint(s) by setting `hjust = 0`:
 ```r
 line.endpoint <- function(d, ...) {
   transform(gapply(d, subset, x == max(x)), hjust = 0)

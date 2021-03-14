@@ -75,3 +75,89 @@ As it turns out, there are two distinct cases of `geom_density()` based on the `
 In conclusion, the key takeaway for me while using `geom_dl()` in the case of my density plot was to be aware of the `y` aesthetic passed onto it. 
 
 </details>
+
+Medium Test
+---
+
+For creating some simple custom positioning methods, I'm employing the general strategy to first select a single point which will demark the ideal spot for intuitive label placement in the considered geometry. By heuristics, this is often taken at the extremities of the gemoetry considered, and with the help of `directlabels::gapply()`, we can use functions such as `min()` and `max()` to obtain these points for **each distinct** categorical variable. 
+
+<details>
+<summary> `gapply` reference </summary>
+
+Function parameters: (with `inlinedocs` style comments/documentation)
+```r
+# R/uf.r:Line 809 {utility.function.R#L809} \ emacs linebreak applied:
+gapply <- function
+### apply a Positioning Method to every group. works like ddply from
+### plyr package, but the grouping column is always called groups, and
+### the Positioning Method is not necessarily a function (but can be).
+(d,
+### data frame with column groups.
+ method,
+### Positioning Method to apply to every group separately.
+ ...,
+### additional arguments, passed to Positioning Methods.
+ groups="groups"
+### can also be useful for piece column.
+ )
+```
+
+</details>
+
+For instance, the most suitable position to place a label on a density-type geometry would be somewhere near its peak, and ideally at the top of it. Following this, we can select the greatest `y` value for each group by subsetting the data frame of labels for the maximum among `y` values within a call to `gapply()`. (which does this for all groups) 
+
+The next step would be to adjust the horizontal and/or vertical justification for all the labels. This can be achieved by imposing a `transform()` operation on the data frame of labels returned by `gapply()` and by accordingly setting values for the `hjust` and/or `vjust` within.
+
+A left-justified vertical adjustment (i.e. the labels are pushed above the point) will get the job done for a density plot, so we can apply `vjust = 0` via a call to `transform()`. Resultant positioning method:
+```r
+density.peak <- function(d, ...) {
+  transform(gapply(d, subset, y == max(y)), vjust = 0)
+}
+```
+For a quick example, we can use this method to position the labels for the density plot built upon the data taken above for the easy test (i.e. the data frame `cases`):
+```r
+g <- ggplot(cases, aes(nums, color = country)) + geom_density()
+direct.label(g, density.peak)
+```
+<img src = "Images/densitypeak.png" width = "100%">
+
+The same strategy can be applied while creating a custom positioning method for a lineplot:
+- Labelling points at the very beginning is an option, wherein the labels are placed to the left of the first `x` value. Since the leftmost value is the smallest `x`, we can subset the data frame and extract `min(x)` to get the point position we require for each group. Next, in order to horizontally adjust/position the labels to the left of this point, we just need to set `hjust = 1` within a `transform()` operation on the data frame of labels:
+```r 
+line.startpoint <- function(d, ...) {
+  transform(gapply(d, subset, x == min(x)), hjust = 1)
+}
+```
+
+- Conversely, labels can be positioned at the end by taking the rightmost/maximum `x` value (i.e. `max(x)`) for each group, and subsequently shifting the label positions towards the right of the endpoint(s) by setting `hjust = 0`:
+```r
+line.endpoint <- function(d, ...) {
+  transform(gapply(d, subset, x == max(x)), hjust = 0)
+} 
+```
+
+For an example to illustrate the use of these two methods, consider some data based on α, β and γ particles with two numeric columns - one denoting their particle sizes, and one denoting their penetration powers: 
+```r
+alpha.data <- data.frame(size = c(1, 2, 3, 4, 5), power = c(1, 1.25, 1.75, 2.5, 3.5), type = "Alpha")
+beta.data <- data.frame(size = c(1, 2, 3, 4, 5), power = c(1.5, 3, 5, 7.25, 9.5), type = "Beta")
+gamma.data <- data.frame(size = c(1, 2, 3, 4, 5), power = c(2, 4, 6.5, 10, 13.5), type = "Gamma")
+df <- rbind(alpha.data, beta.data, gamma.data)
+```
+Plotting the data based on groups given by `type` and using the label positioning methods defined above:
+```r
+g <- ggplot(df, aes(size, power, color = type)) + geom_line() + labs(x = "Particle Size", y = "Penetration Power")
+grid.arrange(direct.label(g, line.startpoint) + coord_cartesian(clip = "off"), 
+             direct.label(g, line.endpoint) + xlim(0, 6), ncol = 2)
+```
+<img src = "Images/linepos.png" width = "100%">
+
+In addition, by using `directlabels::dl.combine()` to make a combination of `line.startpoint` and `line.endpoint`, we can obtain another positioning method which merges their positioned labels in a single plot: (allowing multiple labels for each group)
+```r
+line.extremepoints <- dl.combine(line.startpoint, line.endpoint)
+direct.label(g, line.extremepoints) + xlim(0, 6)
+```
+<img src = "Images/combinedlinepos.png" width = "100%">
+
+The benefit in use for all the aforementioned custom positioning methods is the fact that they emplace labels in positions which are notable and appropriate for the given geometry. In most cases, these methods give us the desired output that we expect from direct labelling.
+
+There is a drawback though, which is when the labels overlap. However, within `directlabels`, there exists a set of utility functions (e.g. `calc.boxes`) which when used in conjunction with positioning methods can solve this issue through collision detection and subsequent label shifting to avoid the collision(s) if detected. (For example, each label is considered as a box based on their height and width, and a thorough logic ensures that no two boxes overlap)

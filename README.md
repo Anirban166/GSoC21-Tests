@@ -136,27 +136,29 @@ line.endpoint <- function(d, ...) {
 } 
 ```
 
-For an example to illustrate the use of these two methods, consider some data based on α, β and γ particles with two numeric columns - one denoting their particle sizes, and one denoting their penetration powers: 
+- In addition, by using `directlabels::dl.combine()` to make a combination of `line.startpoint` and `line.endpoint`, we can obtain another positioning method which merges their positioned labels in a single plot: (allowing multiple labels for each group)
+```r
+line.extremepoints <- dl.combine(line.startpoint, line.endpoint)
+```
+
+For an example to illustrate the use of these three methods, consider some data based on α, β and γ particles with two numeric columns - one denoting their particle sizes, and one denoting their penetration powers: 
 ```r
 alpha.data <- data.frame(size = c(1, 2, 3, 4, 5), power = c(1, 1.25, 1.75, 2.5, 3.5), type = "Alpha")
 beta.data <- data.frame(size = c(1, 2, 3, 4, 5), power = c(1.5, 3, 5, 7.25, 9.5), type = "Beta")
 gamma.data <- data.frame(size = c(1, 2, 3, 4, 5), power = c(2, 4, 6.5, 10, 13.5), type = "Gamma")
 df <- rbind(alpha.data, beta.data, gamma.data)
 ```
-Plotting the data based on groups given by `type` and using the label positioning methods defined above:
+Creating a ggplot object based on the data above with groups given by `type`:
 ```r
-g <- ggplot(df, aes(size, power, color = type)) + geom_line() + labs(x = "Particle Size", y = "Penetration Power")
-grid.arrange(direct.label(g, line.startpoint) + coord_cartesian(clip = "off"), 
-             direct.label(g, line.endpoint) + xlim(0, 6), ncol = 2)
+g <- ggplot(df, aes(size, power, color = type)) + geom_line() + xlim(0, 6) + 
+     labs(x = "Particle Size", y = "Penetration Power") + coord_cartesian(clip = "off")
 ```
-<img src = "Images/linepos.png" width = "100%">
 
-In addition, by using `directlabels::dl.combine()` to make a combination of `line.startpoint` and `line.endpoint`, we can obtain another positioning method which merges their positioned labels in a single plot: (allowing multiple labels for each group)
+Using `directlabels::dlcompare` on the constructed ggplot for a convenient and direct visual comparison of all the lineplot label positioning methods I defined above:
 ```r
-line.extremepoints <- dl.combine(line.startpoint, line.endpoint)
-direct.label(g, line.extremepoints) + xlim(0, 6)
+dlcompare(list(lineplot.methods = g), list("line.startpoint", "line.endpoint", "line.extremepoints"))
 ```
-<img src = "Images/combinedlinepos.png" width = "100%">
+<img src = "Images/lineposcompare.png" width = "100%">
 
 The benefit in use for all the aforementioned custom positioning methods is the fact that they emplace labels in positions which are notable and appropriate for the given geometry. In most cases, these methods give us the desired output that we expect from direct labelling.
 

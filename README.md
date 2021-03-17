@@ -163,3 +163,19 @@ dlcompare(list(lineplot.methods = g), list("line.startpoint", "line.endpoint", "
 The benefit in use for all the aforementioned custom positioning methods is the fact that they emplace labels in positions which are notable and appropriate for the given geometry. In most cases, these methods give us the desired output that we expect from direct labelling.
 
 There is a drawback though, which is when the labels overlap. However, within `directlabels`, there exists a set of utility functions (e.g. `calc.boxes`) which when used in conjunction with positioning methods can solve this issue through collision detection and subsequent label shifting to avoid the collision(s) if detected. (For example, each label is considered as a box based on their height and width, and a thorough logic ensures that no two boxes overlap)
+
+Hard Test
+---
+
+As per the test requirement, I removed `gapply.fun()` and used `gapply()` instead in my forked version of directlabels.  
+For the replacement, I'm using `function(d, ...) gapply(d, function(d, ...) eval(expr))` over instances of `gapply.fun(expr)`, as discussed [here](https://github.com/Anirban166/GSoC21-Tests/issues/7).
+
+The alterations (diff) can be reviewed [here](https://github.com/tdhock/directlabels/compare/master...Anirban166:master).
+
+In case I update or make more changes to that forked version (or delete it at a future point), please refer to the screenshots below.
+
+<img src = "Images/ht1.png" width = "100%">
+<img src = "Images/ht2.png" width = "100%">
+<img src = "Images/ht3.png" width = "100%">
+<img src = "Images/ht4.png" width = "100%">
+<img src = "Images/ht5.png" width = "100%">
